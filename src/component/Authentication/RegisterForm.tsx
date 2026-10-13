@@ -1,78 +1,58 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-
+import { useActionState, useEffect } from "react";
 import {
   ArrowRight,
-  Check,
-  Eye,
-  EyeOff,
-  Loader2,
-  LockKeyhole,
+  UserRound,
   Mail,
-  User,
+  LockKeyhole,
+  ShieldCheck,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { registerUserActions } from "@/app/(auth)/auth_register_actions/authRegisterActions";
+import { RegisterState } from "@/app/(auth)/auth_register_interface/authRegister.interface";
+
+
+
+const initialState: RegisterState = {
+  success: false,
+  message: "",
+  statusCode: 400,
+  data: null,
+};
 
 export default function RegisterForm() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [state, registerAction, pending] = useActionState(
+    registerUserActions,
+    initialState,
+  );
 
-  const [password, setPassword] = useState("");
-
-  const passwordLength = password.length >= 8;
-  const hasNumber = /\d/.test(password);
-  const hasLetter = /[a-zA-Z]/.test(password);
-
-  const passwordStrong =
-    passwordLength && hasNumber && hasLetter;
-
-  const handleSubmit = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
-    e.preventDefault();
-
-    setLoading(true);
-
-    // Backend API integration will be added here.
-    // Example:
-    //
-    // const formData = new FormData(e.currentTarget);
-    //
-    // const data = {
-    //   name: formData.get("name"),
-    //   email: formData.get("email"),
-    //   password: formData.get("password"),
-    // };
-
-    await new Promise((resolve) =>
-      setTimeout(resolve, 1000)
-    );
-
-    setLoading(false);
-  };
+  useEffect(() => {
+    if (state.success) {
+      toast.success(state.message || "Account created successfully!");
+    } else if (state.message) {
+      toast.error(state.message);
+    }
+  }, [state]);
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4"
-    >
-
-      {/* ================= NAME ================= */}
+    <form action={registerAction} className="space-y-5">
+      {/* Full Name */}
       <div className="space-y-2">
         <label
           htmlFor="name"
-          className="text-sm font-bold text-gray-800"
+          className="text-sm font-semibold text-slate-700"
         >
           Full name
         </label>
 
         <div className="relative">
-          <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <UserRound className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
           <Input
             id="name"
@@ -81,22 +61,22 @@ export default function RegisterForm() {
             placeholder="Enter your full name"
             required
             autoComplete="name"
-            className="h-12 rounded-xl border-gray-200 bg-gray-50 pl-11 pr-4 text-sm shadow-none transition placeholder:text-gray-400 focus-visible:border-[#7F22FE] focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-purple-100"
+            className="h-12 rounded-xl border-slate-200 bg-slate-50 pl-11 shadow-none transition-all focus-visible:border-[#7F22FE] focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-purple-100"
           />
         </div>
       </div>
 
-      {/* ================= EMAIL ================= */}
+      {/* Email */}
       <div className="space-y-2">
         <label
           htmlFor="email"
-          className="text-sm font-bold text-gray-800"
+          className="text-sm font-semibold text-slate-700"
         >
           Email address
         </label>
 
         <div className="relative">
-          <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
           <Input
             id="email"
@@ -105,252 +85,144 @@ export default function RegisterForm() {
             placeholder="you@example.com"
             required
             autoComplete="email"
-            className="h-12 rounded-xl border-gray-200 bg-gray-50 pl-11 pr-4 text-sm shadow-none transition placeholder:text-gray-400 focus-visible:border-[#7F22FE] focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-purple-100"
+            className="h-12 rounded-xl border-slate-200 bg-slate-50 pl-11 shadow-none transition-all focus-visible:border-[#7F22FE] focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-purple-100"
           />
         </div>
       </div>
 
-      {/* ================= PASSWORD ================= */}
+      {/* Password */}
       <div className="space-y-2">
         <label
           htmlFor="password"
-          className="text-sm font-bold text-gray-800"
+          className="text-sm font-semibold text-slate-700"
         >
           Password
         </label>
 
         <div className="relative">
-          <LockKeyhole className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <LockKeyhole className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
           <Input
             id="password"
             name="password"
-            type={showPassword ? "text" : "password"}
+            type="password"
             placeholder="Create a strong password"
             required
             autoComplete="new-password"
-            value={password}
-            onChange={(e) =>
-              setPassword(e.target.value)
-            }
-            className="h-12 rounded-xl border-gray-200 bg-gray-50 pl-11 pr-12 text-sm shadow-none transition placeholder:text-gray-400 focus-visible:border-[#7F22FE] focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-purple-100"
+            minLength={6}
+            className="h-12 rounded-xl border-slate-200 bg-slate-50 pl-11 shadow-none transition-all focus-visible:border-[#7F22FE] focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-purple-100"
           />
-
-          <button
-            type="button"
-            onClick={() =>
-              setShowPassword(!showPassword)
-            }
-            className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-gray-400 transition hover:bg-purple-50 hover:text-[#7F22FE]"
-          >
-            {showPassword ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
-          </button>
         </div>
 
-        {/* Password Strength */}
-        {password.length > 0 && (
-          <div className="space-y-2 pt-1">
-
-            <div className="flex gap-1">
-              <div
-                className={`h-1 flex-1 rounded-full ${
-                  password.length >= 4
-                    ? "bg-[#7F22FE]"
-                    : "bg-gray-200"
-                }`}
-              />
-
-              <div
-                className={`h-1 flex-1 rounded-full ${
-                  passwordLength
-                    ? "bg-[#7F22FE]"
-                    : "bg-gray-200"
-                }`}
-              />
-
-              <div
-                className={`h-1 flex-1 rounded-full ${
-                  passwordStrong
-                    ? "bg-[#7F22FE]"
-                    : "bg-gray-200"
-                }`}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <PasswordRequirement
-                checked={passwordLength}
-                text="At least 8 characters"
-              />
-
-              <PasswordRequirement
-                checked={hasLetter}
-                text="Contains a letter"
-              />
-
-              <PasswordRequirement
-                checked={hasNumber}
-                text="Contains a number"
-              />
-            </div>
-          </div>
-        )}
+        <p className="text-xs text-slate-400">
+          Use at least 6 characters for your password.
+        </p>
       </div>
 
-      {/* ================= CONFIRM PASSWORD ================= */}
+      {/* Confirm Password */}
       <div className="space-y-2">
         <label
           htmlFor="confirmPassword"
-          className="text-sm font-bold text-gray-800"
+          className="text-sm font-semibold text-slate-700"
         >
           Confirm password
         </label>
 
         <div className="relative">
-          <LockKeyhole className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <ShieldCheck className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
           <Input
             id="confirmPassword"
             name="confirmPassword"
-            type={
-              showConfirmPassword
-                ? "text"
-                : "password"
-            }
-            placeholder="Confirm your password"
+            type="password"
+            placeholder="Re-enter your password"
             required
             autoComplete="new-password"
-            className="h-12 rounded-xl border-gray-200 bg-gray-50 pl-11 pr-12 text-sm shadow-none transition placeholder:text-gray-400 focus-visible:border-[#7F22FE] focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-purple-100"
+            minLength={6}
+            className="h-12 rounded-xl border-slate-200 bg-slate-50 pl-11 shadow-none transition-all focus-visible:border-[#7F22FE] focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-purple-100"
           />
-
-          <button
-            type="button"
-            onClick={() =>
-              setShowConfirmPassword(
-                !showConfirmPassword
-              )
-            }
-            className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-gray-400 transition hover:bg-purple-50 hover:text-[#7F22FE]"
-          >
-            {showConfirmPassword ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
-          </button>
         </div>
       </div>
 
-      {/* ================= TERMS ================= */}
-      <div className="pt-1">
-        <label className="flex cursor-pointer items-start gap-3">
-          <input
-            type="checkbox"
-            name="terms"
-            required
-            className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-[#7F22FE] focus:ring-[#7F22FE]"
-          />
+      {/* Terms and Conditions */}
+      <div className="flex items-start gap-3">
+        <input
+          id="terms"
+          name="terms"
+          type="checkbox"
+          required
+          className="mt-1 h-4 w-4 rounded border-slate-300 accent-[#7F22FE] focus:ring-[#7F22FE]"
+        />
 
-          <span className="text-xs leading-5 text-gray-500">
-            I agree to the{" "}
-            <Link
-              href="/terms"
-              className="font-bold text-[#7F22FE] hover:underline"
-            >
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link
-              href="/privacy"
-              className="font-bold text-[#7F22FE] hover:underline"
-            >
-              Privacy Policy
-            </Link>
-            .
-          </span>
+        <label
+          htmlFor="terms"
+          className="text-xs leading-5 text-slate-500"
+        >
+          I agree to the{" "}
+          <Link
+            href="/terms"
+            className="font-semibold text-[#7F22FE] hover:underline"
+          >
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/privacy"
+            className="font-semibold text-[#7F22FE] hover:underline"
+          >
+            Privacy Policy
+          </Link>
+          .
         </label>
       </div>
 
-      {/* ================= SUBMIT ================= */}
+      {/* Register Button */}
       <Button
         type="submit"
-        disabled={loading}
-        className="h-12 w-full rounded-xl bg-[#7F22FE] text-sm font-bold text-white shadow-lg shadow-purple-200 transition-all hover:bg-[#6D1BE0] hover:shadow-xl hover:shadow-purple-200 disabled:opacity-70"
+        disabled={pending}
+        className="h-12 w-full rounded-xl bg-[#7F22FE] text-sm font-bold text-white shadow-lg shadow-purple-200 transition-all hover:bg-[#6915df] hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        {pending ? (
+          <span className="flex items-center justify-center gap-2">
+            <Spinner />
             Creating account...
-          </>
+          </span>
         ) : (
-          <>
-            Create account
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </>
+          <span className="flex items-center justify-center gap-2">
+            Create your account
+            <ArrowRight className="h-4 w-4" />
+          </span>
         )}
       </Button>
 
-      {/* ================= LOGIN ================= */}
+      {/* Login Link */}
       <div className="relative py-2">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-100" />
+          <div className="w-full border-t border-slate-100" />
         </div>
 
         <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-xs font-medium text-gray-400">
+          <span className="bg-white px-3 text-xs font-medium text-slate-400">
             Already have an account?
           </span>
         </div>
       </div>
 
       <Button
-        
+        type="button"
         variant="outline"
-        className="h-12 w-full rounded-xl border-gray-200 bg-white text-sm font-bold text-gray-700 transition hover:border-purple-200 hover:bg-purple-50 hover:text-[#7F22FE]"
+        className="h-12 w-full rounded-xl border-slate-200 bg-white text-sm font-bold text-slate-700 transition hover:border-purple-200 hover:bg-purple-50 hover:text-[#7F22FE]"
+        
       >
-        <Link href="/login">
-          Sign in to SocialNest
-        </Link>
+        <Link href="/login">Login to your account</Link>
       </Button>
+
+      {/* Server Action Error */}
+      {!state.success && state.message && (
+        <p role="alert" className="text-center text-sm text-red-600">
+          {state.message}
+        </p>
+      )}
     </form>
-  );
-}
-
-
-/* ================= PASSWORD REQUIREMENT ================= */
-
-function PasswordRequirement({
-  checked,
-  text,
-}: {
-  checked: boolean;
-  text: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <div
-        className={`flex h-3.5 w-3.5 items-center justify-center rounded-full ${
-          checked
-            ? "bg-[#7F22FE] text-white"
-            : "bg-gray-100 text-gray-300"
-        }`}
-      >
-        <Check className="h-2.5 w-2.5" />
-      </div>
-
-      <span
-        className={`text-[11px] ${
-          checked
-            ? "text-gray-600"
-            : "text-gray-400"
-        }`}
-      >
-        {text}
-      </span>
-    </div>
   );
 }
